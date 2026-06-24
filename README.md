@@ -1,73 +1,86 @@
-# React + TypeScript + Vite
+# TaskPilot 🚀
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+TaskPilot is an AI-powered task management application built using React, TypeScript, Vite, Tailwind CSS, and Google Gemini AI.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### Current Features
+- Natural language task capture
+- AI-powered task extraction using Gemini
+- Automatic date and time detection
+- Priority classification
+- Estimated effort calculation
+- Loading, error, and empty states
+- Responsive UI
 
-## React Compiler
+### Upcoming Features
+- Intelligent task prioritization
+- AI scheduling assistance
+- Personalized productivity recommendations
+- Context-aware reminders
+- Google Calendar integration
+- Goal and habit tracking
+- Voice-enabled assistance
+- Autonomous task planning
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- Google Gemini API
+- Lucide React
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Installation
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Clone the repository:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone https://github.com/thecodewithganesh/TaskPilot.git
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Install dependencies:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
+
+Create `.env`:
+
+```env
+VITE_GEMINI_API_KEY=YOUR_API_KEY
+```
+
+Run locally:
+
+```bash
+npm run dev
+```
+
+## Folder Structure
+
+```
+src/
+├── components/
+├── hooks/
+├── pages/
+├── services/
+├── types/
+├── utils/
+```
+
+## Future Roadmap
+
+- AI scheduling assistant
+- Calendar integration
+- Goal tracking
+- Voice assistant
+- Autonomous task execution
+
+## Author
+
+Ganesh
+
+GitHub:
+https://github.com/thecodewithganesh
