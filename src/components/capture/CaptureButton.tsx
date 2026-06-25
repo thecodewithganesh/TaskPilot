@@ -1,3 +1,4 @@
+// CaptureButton.tsx
 import { ArrowUp, Loader2 } from "lucide-react";
 
 export interface CaptureButtonProps {
@@ -6,11 +7,7 @@ export interface CaptureButtonProps {
   disabled?: boolean;
 }
 
-export function CaptureButton({
-  onClick,
-  loading = false,
-  disabled = false,
-}: CaptureButtonProps) {
+export function CaptureButton({ onClick, loading, disabled }: CaptureButtonProps) {
   const isDisabled = disabled || loading;
 
   return (
@@ -19,38 +16,17 @@ export function CaptureButton({
       onClick={onClick}
       disabled={isDisabled}
       aria-label="Capture task"
-      aria-busy={loading}
-      className="
-        flex
-        h-14
-        w-14
-        shrink-0
-        items-center
-        justify-center
-        rounded-full
-        bg-neutral-900
-        text-white
-        shadow-md
-        transition-all
-        duration-200
-        ease-out
-        hover:bg-neutral-800
-        hover:shadow-lg
-        active:scale-95
-        focus:outline-none
-        focus:ring-2
-        focus:ring-neutral-900/20
-        disabled:cursor-not-allowed
-        disabled:bg-neutral-200
-        disabled:text-neutral-400
-        disabled:shadow-none
-        disabled:active:scale-100
-      "
+      className="group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white shadow-lg shadow-neutral-900/20 transition-all duration-200 ease-out hover:scale-105 hover:bg-neutral-800 hover:shadow-xl hover:shadow-neutral-900/25 active:scale-90 disabled:scale-100 disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:text-neutral-400 disabled:shadow-none sm:h-14 sm:w-14"
     >
+      <span
+        className={`absolute inset-0 rounded-full bg-white/10 transition-opacity duration-200 ${
+          isDisabled ? "opacity-0" : "opacity-0 group-hover:opacity-100"
+        }`}
+      />
       {loading ? (
-        <Loader2 className="h-5 w-5 animate-spin" />
+        <Loader2 className="h-5 w-5 animate-spin sm:h-5 sm:w-5" />
       ) : (
-        <ArrowUp className="h-5 w-5" />
+        <ArrowUp className="h-5 w-5 transition-transform duration-200 ease-out group-hover:-translate-y-0.5 sm:h-5 sm:w-5" />
       )}
     </button>
   );

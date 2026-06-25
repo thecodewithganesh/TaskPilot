@@ -1,6 +1,7 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useGeminiExtraction } from "./usegeminiExtraction";
 import type { Task, CaptureStatus } from "../types/task.types";
+import { loadTasks, saveTasks, clearTasks as clearPersistedTasks } from "../utils/LocalStorage";
 
 export interface UseTaskCaptureResult {
   tasks: Task[];
@@ -10,62 +11,42 @@ export interface UseTaskCaptureResult {
   captureTask: (rawInput: string) => Promise<void>;
   retryLastCapture: () => Promise<void>;
   clearTasks: () => void;
+  toggleTaskCompletion: (id: string) => void;
+  deleteTask: (id: string) => void;
 }
 
 export function useTaskCapture(): UseTaskCaptureResult {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<Task[]>(() => loadTasks());
   const [lastInput, setLastInput] = useState<string>("");
-
   const { status, error, extractTasks } = useGeminiExtraction();
+
+  useEffect(() => {
+    saveTasks(tasks);
+  }, [tasks]);
 
   const captureTask = useCallback(
     async (rawInput: string): Promise<void> => {
       const trimmedInput = rawInput.trim();
-
-      if (!trimmedInput) {
-        return;
-      }
+      if (!trimmedInput) return;
 
       setLastInput(trimmedInput);
-
       const result = await extractTasks(trimmedInput);
+      if (!result || result.tasks.length === 0) return;
 
-      if (!result || result.tasks.length === 0) {
-        return;
-      }
-
-      setTasks((previousTasks) => [
-        ...previousTasks,
-        ...result.tasks,
-      ]);
+      setTasks((previousTasks) => [...previousTasks, ...result.tasks]);
     },
-    [extractTasks]
+    [extractTasks],
   );
 
   const retryLastCapture = useCallback(async (): Promise<void> => {
-    if (!lastInput.trim()) {
-      return;
-    }
+    if (!lastInput.trim()) return;
 
     const result = await extractTasks(lastInput);
+    if (!result || result.tasks.length === 0) return;
 
-    if (!result || result.tasks.length === 0) {
-      return;
-    }
-
-    // Prevent duplicate tasks on retry
     setTasks((previousTasks) => {
-      const existingKeys = new Set(
-        previousTasks.map(
-          (task) => `${task.title}-${task.deadline}`
-        )
-      );
-
-      const newTasks = result.tasks.filter(
-        (task) =>
-          !existingKeys.has(`${task.title}-${task.deadline}`)
-      );
-
+      const existingKeys = new Set(previousTasks.map((task) => `${task.title}-${task.deadline}`));
+      const newTasks = result.tasks.filter((task) => !existingKeys.has(`${task.title}-${task.deadline}`));
       return [...previousTasks, ...newTasks];
     });
   }, [lastInput, extractTasks]);
@@ -73,15 +54,18 @@ export function useTaskCapture(): UseTaskCaptureResult {
   const clearTasks = useCallback((): void => {
     setTasks([]);
     setLastInput("");
+    clearPersistedTasks();
   }, []);
 
-  return {
-    tasks,
-    status,
-    error,
-    lastInput,
-    captureTask,
-    retryLastCapture,
-    clearTasks,
-  };
+  const toggleTaskCompletion = useCallback((id: string) => {
+    setTasks((previousTasks) =>
+      previousTasks.map((task) => (task.id === id ? { ...task, completed: !task.completed } : task)),
+    );
+  }, []);
+
+  const deleteTask = useCallback((id: string): void => {
+    setTasks((previousTasks) => previousTasks.filter((task) => task.id !== id));
+  }, []);
+
+  return { tasks, status, error, lastInput, captureTask, retryLastCapture, clearTasks, toggleTaskCompletion, deleteTask };
 }

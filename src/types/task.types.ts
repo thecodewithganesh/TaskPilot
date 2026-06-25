@@ -16,8 +16,9 @@ export interface Task {
   confidence: number;
   createdAt: string;
   rawInput: string;
-}
 
+  completed: boolean;
+}
 export interface ExtractionResult {
   tasks: Task[];
 }

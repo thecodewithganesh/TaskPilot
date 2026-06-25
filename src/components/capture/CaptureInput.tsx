@@ -13,14 +13,13 @@ const PLACEHOLDER_EXAMPLES = [
   "Interview June 30 at 10 AM",
 ];
 
-const PLACEHOLDER_ROTATION_MS = 2800;
+const PLACEHOLDER_ROTATION_MS = 3000;
 const MIN_HEIGHT_PX = 64;
-const MAX_HEIGHT_PX = 200;
 
 export function CaptureInput({
   value,
   onChange,
-  disabled = false,
+  disabled,
 }: CaptureInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
@@ -29,7 +28,7 @@ export function CaptureInput({
     const intervalId = window.setInterval(() => {
       setPlaceholderIndex(
         (previousIndex) =>
-          (previousIndex + 1) % PLACEHOLDER_EXAMPLES.length
+          (previousIndex + 1) % PLACEHOLDER_EXAMPLES.length,
       );
     }, PLACEHOLDER_ROTATION_MS);
 
@@ -44,49 +43,36 @@ export function CaptureInput({
     }
 
     textarea.style.height = "auto";
-
-    textarea.style.height = `${Math.min(
-      Math.max(textarea.scrollHeight, MIN_HEIGHT_PX),
-      MAX_HEIGHT_PX
+    textarea.style.height = `${Math.max(
+      textarea.scrollHeight,
+      MIN_HEIGHT_PX,
     )}px`;
   }, [value]);
 
   return (
     <textarea
       ref={textareaRef}
-      autoFocus
-      spellCheck={false}
-      aria-label="Task input"
       value={value}
+      onChange={(event) => onChange(event.target.value)}
       disabled={disabled}
       rows={1}
       placeholder={PLACEHOLDER_EXAMPLES[placeholderIndex]}
       style={{ minHeight: `${MIN_HEIGHT_PX}px` }}
-      onChange={(event) => onChange(event.target.value)}
       className="
-        w-full
-        resize-none
-        overflow-y-auto
-        rounded-3xl
-        border
-        border-neutral-200
-        bg-white
-        px-5
-        py-4
-        text-base
-        text-neutral-900
-        placeholder-neutral-400
-        shadow-sm
-        outline-none
-        transition-all
-        duration-150
-        focus:border-neutral-300
-        focus:ring-2
-        focus:ring-neutral-900/10
-        disabled:cursor-not-allowed
-        disabled:bg-neutral-50
-        disabled:text-neutral-400
-        sm:text-lg
+      w-full
+      resize-none
+      bg-transparent
+      px-5
+      py-4
+      text-base
+      text-neutral-900
+      placeholder:text-neutral-400
+      outline-none
+      transition-all
+      duration-200
+      disabled:cursor-not-allowed
+      disabled:text-neutral-400
+      sm:text-lg
       "
     />
   );

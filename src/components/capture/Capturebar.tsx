@@ -1,3 +1,4 @@
+// CaptureBar.tsx
 import { useCallback, useState, type KeyboardEvent } from "react";
 import { CaptureInput } from "./CaptureInput";
 import { CaptureButton } from "./CaptureButton";
@@ -10,6 +11,7 @@ export interface CaptureBarProps {
 
 export function CaptureBar({ status, captureTask }: CaptureBarProps) {
   const [input, setInput] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
   const isLoading = status === "loading";
 
@@ -36,7 +38,13 @@ export function CaptureBar({ status, captureTask }: CaptureBarProps) {
   return (
     <div
       onKeyDown={handleKeyDown}
-      className="flex w-full items-end gap-3 rounded-3xl border border-neutral-200 bg-white p-2 shadow-sm"
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
+      className={`flex w-full items-end gap-2 rounded-3xl border bg-white p-2 transition-all duration-200 ease-out sm:gap-3 ${
+        isFocused
+          ? "border-neutral-300 shadow-lg shadow-neutral-900/[0.06] ring-4 ring-neutral-900/[0.05]"
+          : "border-neutral-200 shadow-sm hover:border-neutral-300 hover:shadow-md"
+      }`}
     >
       <CaptureInput value={input} onChange={setInput} disabled={isLoading} />
       <CaptureButton

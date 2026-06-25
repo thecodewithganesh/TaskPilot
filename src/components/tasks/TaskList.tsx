@@ -1,20 +1,45 @@
+import { motion } from "framer-motion";
 import type { Task } from "../../types/task.types";
 import { TaskCard } from "./TaskCard";
 
 export interface TaskListProps {
   tasks: Task[];
+  onToggleComplete: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export function TaskList({ tasks }: TaskListProps) {
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    },
+  },
+  exit: { opacity: 0, transition: { duration: 0.15 } },
+};
+
+export function TaskList({ tasks, onToggleComplete, onDelete }: TaskListProps) {
   if (tasks.length === 0) {
     return null;
   }
 
   return (
-    <div className="flex w-full flex-col gap-3">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      className="flex w-full flex-col gap-3"
+    >
       {tasks.map((task) => (
-        <TaskCard key={task.id} task={task} />
+        <TaskCard
+          key={task.id}
+          task={task}
+          onToggleComplete={onToggleComplete}
+          onDelete={onDelete}
+        />
       ))}
-    </div>
+    </motion.div>
   );
 }

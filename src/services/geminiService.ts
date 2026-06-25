@@ -22,7 +22,7 @@ export async function extractTasksFromText(
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash",
       contents: userInput,
       config: {
         systemInstruction: buildExtractionSystemPrompt(
@@ -40,9 +40,7 @@ export async function extractTasksFromText(
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  title: {
-                    type: Type.STRING,
-                  },
+                  title: { type: Type.STRING },
                   deadline: {
                     type: Type.STRING,
                     nullable: true,
@@ -83,13 +81,15 @@ export async function extractTasksFromText(
     }
 
     return JSON.parse(response.text) as GeminiExtractionResponse;
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Gemini Error:", error);
+
     if (error instanceof GeminiExtractionError) {
       throw error;
     }
 
     throw new GeminiExtractionError(
-      "Failed to extract tasks from Gemini.",
+      error?.message || "Failed to extract tasks from Gemini."
     );
   }
 }

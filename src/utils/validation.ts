@@ -87,18 +87,16 @@ export function validateExtractionResponse(
         task.title.trim()
     )
     .map((task) => ({
-      id: uuidv4(),
-      title: task.title.trim(),
-      deadline: validateDeadline(task.deadline),
-      time: typeof task.time === "string" ? task.time : null,
-      priority: validatePriority(task.priority),
-
-      // Use Gemini's effort if provided, otherwise estimate ourselves
-      estimatedEffort:
-        typeof task.estimatedEffort === "string" &&
-        task.estimatedEffort.trim()
-          ? task.estimatedEffort
-          : estimateEffort(task.title),
+  id: uuidv4(),
+  title: task.title.trim(),
+  deadline: validateDeadline(task.deadline),
+  time: typeof task.time === "string" ? task.time : null,
+  priority: validatePriority(task.priority),
+  completed: false,
+  estimatedEffort:
+    typeof task.estimatedEffort === "string"
+      ? task.estimatedEffort
+      : "Unknown",
 
       confidence: clampConfidence(task.confidence),
       createdAt: new Date().toISOString(),
