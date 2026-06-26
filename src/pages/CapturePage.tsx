@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useTaskCapture } from "../hooks/useTaskCapture";
+import { useShareTarget } from "../hooks/useShareTarget";
 import { CaptureBar } from "../components/capture/Capturebar";
 import { LoadingState } from "../components/feedback/LoadingState";
 import { ErrorState } from "../components/feedback/ErrorState";
@@ -8,7 +10,6 @@ import { TaskList } from "../components/tasks/TaskList";
 import { AppShell } from "../components/layout/Appshell";
 import { DarkModeToggle } from "../components/layout/DarkModeToggle";
 import { TaskStats } from "../components/tasks/TaskStats";
-import { useState } from "react";
 
 export function CapturePage() {
   const {
@@ -22,28 +23,26 @@ export function CapturePage() {
     deleteTask,
   } = useTaskCapture();
 
-  // 1. All state definitions strictly at the top
+  const sharedPayload = useShareTarget();
+
+  useEffect(() => {
+    if (!sharedPayload) return;
+    const textToCapture = sharedPayload.text || sharedPayload.title;
+    if (textToCapture && textToCapture.trim().length > 0) {
+      void captureTask(textToCapture);
+    }
+  }, [sharedPayload, captureTask]);
+
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // 2. Now it is completely safe to compute your filtered array
   const filteredTasks = tasks
     .filter((task) => {
-      if (filter === "active") {
-        return !task.completed;
-      }
-
-      if (filter === "completed") {
-        return task.completed;
-      }
-
+      if (filter === "active") return !task.completed;
+      if (filter === "completed") return task.completed;
       return true;
     })
-    .filter((task) =>
-      task.title
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase())
-    );
+    .filter((task) => task.title?.toLowerCase().includes(searchQuery.toLowerCase()));
 
   function handleClearAll() {
     clearTasks();
@@ -64,7 +63,6 @@ export function CapturePage() {
         <h1 className="text-3xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100 sm:text-4xl">
           TaskPilot
         </h1>
-
         <p className="mt-2 text-base text-neutral-500 dark:text-neutral-400 sm:text-lg">
           What do you need to remember?
         </p>
@@ -101,46 +99,32 @@ export function CapturePage() {
             <>
               <TaskStats tasks={tasks} />
 
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Search tasks..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2 text-neutral-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                />
+              </div>
+
               <div className="mb-4 flex gap-2">
                 <button
                   onClick={() => setFilter("all")}
-                  className={`rounded-xl px-4 py-2 ${
-                    filter === "all"
-                      ? "bg-blue-500 text-white"
-                      : "bg-neutral-200 dark:bg-neutral-700"
-                  }`}
+                  className={`rounded-xl px-4 py-2 ${filter === "all" ? "bg-blue-500 text-white" : "bg-neutral-200 dark:bg-neutral-700"}`}
                 >
                   All
                 </button>
-
-                <div className="mb-4">
-                  <input
-                    type="text"
-                    placeholder="Search tasks..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2 text-neutral-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
-                  />
-                </div>
-
                 <button
                   onClick={() => setFilter("active")}
-                  className={`rounded-xl px-4 py-2 ${
-                    filter === "active"
-                      ? "bg-blue-500 text-white"
-                      : "bg-neutral-200 dark:bg-neutral-700"
-                  }`}
+                  className={`rounded-xl px-4 py-2 ${filter === "active" ? "bg-blue-500 text-white" : "bg-neutral-200 dark:bg-neutral-700"}`}
                 >
                   Active
                 </button>
-
                 <button
                   onClick={() => setFilter("completed")}
-                  className={`rounded-xl px-4 py-2 ${
-                    filter === "completed"
-                      ? "bg-blue-500 text-white"
-                      : "bg-neutral-200 dark:bg-neutral-700"
-                  }`}
+                  className={`rounded-xl px-4 py-2 ${filter === "completed" ? "bg-blue-500 text-white" : "bg-neutral-200 dark:bg-neutral-700"}`}
                 >
                   Completed
                 </button>
