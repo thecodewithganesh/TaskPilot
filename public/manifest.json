@@ -9,17 +9,16 @@
   "background_color": "#ffffff",
   "theme_color": "#171717",
   "orientation": "portrait",
-  "screenshots": [
-  {
-    "src": "/screenshots/home-mobile.png",
-    "sizes": "720x1600",
-    "type": "image/png"
-  },
-  {
-    "src": "/screenshots/home-desktop.png",
-    "sizes": "1280x720",
-    "type": "image/png",
-    "form_factor": "wide"
-  }
-]
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
