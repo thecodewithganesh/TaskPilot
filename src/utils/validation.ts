@@ -34,7 +34,7 @@ function validateDeadline(deadline: unknown): string | null {
     : parsed.toISOString().split("T")[0];
 }
 
-function estimateEffort(title: string): string {
+export function estimateEffort(title: string): string {
   const text = title.toLowerCase();
 
   if (
