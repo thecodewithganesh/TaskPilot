@@ -6,6 +6,7 @@ export interface TaskListProps {
   tasks: Task[];
   onToggleComplete: (id: string) => void;
   onDelete: (id: string) => void;
+  onReschedule: (id: string, newDate: string) => void;
 }
 
 const containerVariants = {
@@ -16,10 +17,20 @@ const containerVariants = {
       delayChildren: 0.05,
     },
   },
-  exit: { opacity: 0, transition: { duration: 0.15 } },
+  exit: {
+    opacity: 0,
+    transition: {
+      duration: 0.15,
+    },
+  },
 };
 
-export function TaskList({ tasks, onToggleComplete, onDelete }: TaskListProps) {
+export function TaskList({
+  tasks,
+  onToggleComplete,
+  onDelete,
+  onReschedule,
+}: TaskListProps) {
   if (tasks.length === 0) {
     return null;
   }
@@ -38,6 +49,7 @@ export function TaskList({ tasks, onToggleComplete, onDelete }: TaskListProps) {
           task={task}
           onToggleComplete={onToggleComplete}
           onDelete={onDelete}
+          onReschedule={onReschedule}
         />
       ))}
     </motion.div>

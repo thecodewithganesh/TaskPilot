@@ -13,12 +13,26 @@ export interface UseTaskCaptureResult {
   clearTasks: () => void;
   toggleTaskCompletion: (id: string) => void;
   deleteTask: (id: string) => void;
+   rescheduleTask: (id: string, newDate: string) => void;
 }
 
 export function useTaskCapture(): UseTaskCaptureResult {
   const [tasks, setTasks] = useState<Task[]>(() => loadTasks());
   const [lastInput, setLastInput] = useState<string>("");
   const { status, error, extractTasks } = useGeminiExtraction();
+
+  function rescheduleTask(id: string, newDate: string) {
+  setTasks((prev) =>
+    prev.map((task) =>
+      task.id === id
+        ? {
+            ...task,
+            deadline: newDate,
+          }
+        : task
+    )
+  );
+}
 
   useEffect(() => {
     saveTasks(tasks);
@@ -67,5 +81,5 @@ export function useTaskCapture(): UseTaskCaptureResult {
     setTasks((previousTasks) => previousTasks.filter((task) => task.id !== id));
   }, []);
 
-  return { tasks, status, error, lastInput, captureTask, retryLastCapture, clearTasks, toggleTaskCompletion, deleteTask };
+  return { tasks, status, error, lastInput, captureTask, retryLastCapture, clearTasks, toggleTaskCompletion, deleteTask,  rescheduleTask, };
 }

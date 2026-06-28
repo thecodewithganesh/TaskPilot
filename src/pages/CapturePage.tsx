@@ -10,7 +10,17 @@ import { TaskList } from "../components/tasks/TaskList";
 import { AppShell } from "../components/layout/Appshell";
 import { DarkModeToggle } from "../components/layout/DarkModeToggle";
 import { TaskStats } from "../components/tasks/TaskStats";
-
+import { TaskCalendar } from "../components/Calender/TaskCalender";
+import { UpcomingTasks } from "../components/tasks/UpcomingTasks";
+import { NotificationSettings } from "../components/settings/NotificationSettings";
+import { useTaskReminders } from "../hooks/useTaskReminders";
+import { ReminderSettings } from "../components/settings/ReminderSettings";
+import { SmartInsights } from "../components/insights/SmartInsights";
+import { AISchedule } from "../components/scheduler/AISchedule";
+import { DailyPlanner } from "../components/scheduler/DailyPlanner";
+import { WorkloadSummary } from "../components/scheduler/WorkloadSummary";
+import { SmartScheduler } from "../components/scheduler/SmartScheduler";
+import { FloatingAIAssistant } from "../components/assistant/FloatingAIAssistant";
 export function CapturePage() {
   const {
     tasks,
@@ -21,7 +31,12 @@ export function CapturePage() {
     clearTasks,
     toggleTaskCompletion,
     deleteTask,
+    rescheduleTask,
   } = useTaskCapture();
+
+  useTaskReminders(tasks);
+
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
   const sharedPayload = useShareTarget();
 
@@ -42,7 +57,19 @@ export function CapturePage() {
       if (filter === "completed") return task.completed;
       return true;
     })
-    .filter((task) => task.title?.toLowerCase().includes(searchQuery.toLowerCase()));
+    .filter((task) => task.title?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+    const calendarFilteredTasks = selectedDate
+  ? filteredTasks.filter((task) => {
+      if (!task.deadline) return false;
+
+      return (
+        new Date(task.deadline).toDateString() ===
+        selectedDate.toDateString()
+      );
+    })
+  : filteredTasks;
 
   function handleClearAll() {
     clearTasks();
@@ -97,9 +124,25 @@ export function CapturePage() {
             <EmptyState key="empty" />
           ) : (
             <>
-              <TaskStats tasks={tasks} />
+          <div className="mb-6">
+        <TaskCalendar
+          tasks={tasks}
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+        />
+        <UpcomingTasks tasks={tasks} />
+        <NotificationSettings />
+        <ReminderSettings />
+        <SmartInsights tasks={tasks} />
+        <AISchedule tasks={tasks} />
+        <DailyPlanner tasks={tasks} />
+        <WorkloadSummary tasks={tasks} />
+        <SmartScheduler tasks={tasks} />
+      </div>
 
-              <div className="mb-4">
+          <TaskStats tasks={tasks} />
+
+          <div className="mb-4">
                 <input
                   type="text"
                   placeholder="Search tasks..."
@@ -109,37 +152,57 @@ export function CapturePage() {
                 />
               </div>
 
-              <div className="mb-4 flex gap-2">
-                <button
-                  onClick={() => setFilter("all")}
-                  className={`rounded-xl px-4 py-2 ${filter === "all" ? "bg-blue-500 text-white" : "bg-neutral-200 dark:bg-neutral-700"}`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setFilter("active")}
-                  className={`rounded-xl px-4 py-2 ${filter === "active" ? "bg-blue-500 text-white" : "bg-neutral-200 dark:bg-neutral-700"}`}
-                >
-                  Active
-                </button>
-                <button
-                  onClick={() => setFilter("completed")}
-                  className={`rounded-xl px-4 py-2 ${filter === "completed" ? "bg-blue-500 text-white" : "bg-neutral-200 dark:bg-neutral-700"}`}
-                >
-                  Completed
-                </button>
-              </div>
+              <div className="mb-6 flex flex-wrap gap-3">
+  <button
+    onClick={() => setFilter("all")}
+    className={`rounded-2xl px-5 py-3 text-sm font-semibold transition-all duration-200 ${
+      filter === "all"
+        ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+        : "bg-neutral-200 text-neutral-700 hover:bg-neutral-300 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+    }`}
+  >
+    📋 All ({tasks.length})
+  </button>
+
+  <button
+    onClick={() => setFilter("active")}
+    className={`rounded-2xl px-5 py-3 text-sm font-semibold transition-all duration-200 ${
+      filter === "active"
+        ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30"
+        : "bg-neutral-200 text-neutral-700 hover:bg-neutral-300 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+    }`}
+  >
+    ⏳ Active ({tasks.filter(t => !t.completed).length})
+  </button>
+
+  <button
+    onClick={() => setFilter("completed")}
+    className={`rounded-2xl px-5 py-3 text-sm font-semibold transition-all duration-200 ${
+      filter === "completed"
+        ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+        : "bg-neutral-200 text-neutral-700 hover:bg-neutral-300 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+    }`}
+  >
+    ✅ Completed ({tasks.filter(t => t.completed).length})
+  </button>
+</div>
 
               <TaskList
                 key="tasks"
-                tasks={filteredTasks}
+                tasks={calendarFilteredTasks}
                 onToggleComplete={toggleTaskCompletion}
                 onDelete={deleteTask}
+                onReschedule={rescheduleTask}
               />
             </>
           )}
         </AnimatePresence>
       </div>
+      <FloatingAIAssistant
+  tasks={tasks}
+  onDelete={deleteTask}
+  onToggleComplete={toggleTaskCompletion}
+/>
     </AppShell>
   );
 }
