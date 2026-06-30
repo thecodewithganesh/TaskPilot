@@ -24,13 +24,12 @@ export function AssistantInput({
 
   function handleSend() {
     if (!text.trim()) return;
-
     onSend(text);
     setText("");
   }
 
   return (
-    <div className="mt-5 flex gap-3">
+    <div className="mt-5 flex items-center gap-2">
       <input
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -40,13 +39,13 @@ export function AssistantInput({
           }
         }}
         placeholder="Ask TaskPilot AI..."
-        className="flex-1 rounded-xl border border-neutral-300 px-4 py-3 outline-none focus:border-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+        className="min-w-0 flex-1 rounded-xl border border-neutral-300 px-3 py-3 text-sm outline-none focus:border-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white sm:px-4 sm:text-base"
       />
 
       <button
         type="button"
         onClick={onStartListening}
-        className={`rounded-xl p-3 transition ${
+        className={`shrink-0 rounded-xl p-3 transition ${
           listening
             ? "animate-pulse bg-red-500 text-white"
             : "bg-neutral-200 hover:bg-neutral-300 dark:bg-neutral-700 dark:hover:bg-neutral-600"
@@ -58,7 +57,7 @@ export function AssistantInput({
       <button
         type="button"
         onClick={handleSend}
-        className="rounded-xl bg-blue-600 p-3 text-white transition hover:bg-blue-700"
+        className="shrink-0 rounded-xl bg-blue-600 p-3 text-white transition hover:bg-blue-700"
       >
         <Send size={20} />
       </button>

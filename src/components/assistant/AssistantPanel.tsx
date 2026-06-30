@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Bot } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "./ChatMessage";
 import { AssistantInput } from "./AssistantInput";
@@ -8,7 +8,6 @@ import type { Task } from "../../types/task.types";
 import { searchTasks } from "../../utils/taskSearch";
 import { getTaskAnalytics } from "../../utils/taskAnalytics";
 import { useAssistantVoice } from "../../hooks/useAssistantVoice";
-import { Bot } from "lucide-react";
 
 interface AssistantPanelProps {
   open: boolean;
@@ -37,7 +36,7 @@ export function AssistantPanel({
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "ai",
-     message: "Hello. I'm TaskPilot AI. How can I help you today?"
+      message: "Hello. I'm TaskPilot AI. How can I help you today?",
     },
   ]);
 
@@ -51,6 +50,12 @@ export function AssistantPanel({
     });
   }, [messages]);
 
+  // FIX: useAssistantVoice now only calls this once per spoken phrase
+  // (accumulating fragments internally and firing onResult in onend),
+  // not once per onresult event — which previously caused a single
+  // sentence to be split into several separate messages, each getting
+  // its own AI reply (visible in your screenshot as 6 generic replies
+  // to one utterance).
   const { listening, startListening } = useAssistantVoice((text) => {
     setPendingVoiceText(text);
     void handleSend(text);
@@ -63,7 +68,7 @@ export function AssistantPanel({
   function reportTaskNotFound(taskTitle: string) {
     setMessages((prev) => [
       ...prev,
-      { sender: "ai", message: ` I couldn't find a task matching "${taskTitle}".` },
+      { sender: "ai", message: `I couldn't find a task matching "${taskTitle}".` },
     ]);
   }
 
@@ -89,7 +94,7 @@ export function AssistantPanel({
       if (results.length === 0) {
         setMessages((prev) => [
           ...prev,
-          { sender: "ai", message: " I couldn't find any matching tasks." },
+          { sender: "ai", message: "I couldn't find any matching tasks." },
         ]);
         return;
       }
@@ -98,7 +103,7 @@ export function AssistantPanel({
         ...prev,
         {
           sender: "ai",
-          message: " I found:\n\n" + results.map((task) => `• ${task.title}`).join("\n"),
+          message: "I found:\n\n" + results.map((task) => `• ${task.title}`).join("\n"),
         },
       ]);
       return;
@@ -120,17 +125,17 @@ export function AssistantPanel({
       let reply = "";
 
       if (lower.includes("left") || lower.includes("pending")) {
-        reply = ` You have ${analytics.pending} pending task(s).`;
+        reply = `You have ${analytics.pending} pending task(s).`;
       } else if (lower.includes("completed")) {
         reply = `You have completed ${analytics.completed} task(s).`;
       } else if (lower.includes("overdue")) {
-        reply = ` You have ${analytics.overdue} overdue task(s).`;
+        reply = `You have ${analytics.overdue} overdue task(s).`;
       } else if (lower.includes("today")) {
-        reply = ` You have ${analytics.today} task(s) due today.`;
+        reply = `You have ${analytics.today} task(s) due today.`;
       } else if (lower.includes("high") || lower.includes("urgent") || lower.includes("priority")) {
-        reply = ` You have ${analytics.highPriority} high priority task(s).`;
+        reply = `You have ${analytics.highPriority} high priority task(s).`;
       } else {
-        reply = " I'm not sure how to answer that one yet.";
+        reply = "I'm not sure how to answer that one yet.";
       }
 
       setMessages((prev) => [...prev, { sender: "ai", message: reply }]);
@@ -168,7 +173,7 @@ export function AssistantPanel({
           onReschedule(task.id, action.newDate);
           setMessages((prev) => [
             ...prev,
-            { sender: "ai", message: ` Rescheduled "${task.title}" to ${action.newDate}.` },
+            { sender: "ai", message: `Rescheduled "${task.title}" to ${action.newDate}.` },
           ]);
         } else {
           reportTaskNotFound(action.taskTitle);
@@ -182,7 +187,7 @@ export function AssistantPanel({
           onChangePriority(task.id, action.priority);
           setMessages((prev) => [
             ...prev,
-            { sender: "ai", message: ` Set "${task.title}" to ${action.priority} priority.` },
+            { sender: "ai", message: `Set "${task.title}" to ${action.priority} priority.` },
           ]);
         } else {
           reportTaskNotFound(action.taskTitle);
@@ -193,7 +198,7 @@ export function AssistantPanel({
       const replyMessage = "reply" in action ? action.reply : "Sorry, I couldn't process that request.";
       setMessages((prev) => [...prev, { sender: "ai", message: replyMessage }]);
     } catch {
-      setMessages((prev) => [...prev, { sender: "ai", message: " Sorry, I couldn't process that request." }]);
+      setMessages((prev) => [...prev, { sender: "ai", message: "Sorry, I couldn't process that request." }]);
     }
   }
 
@@ -215,19 +220,39 @@ export function AssistantPanel({
             transition={{ type: "spring", damping: 25, stiffness: 250 }}
             className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl bg-white p-6 shadow-2xl dark:bg-neutral-900"
           >
+            {/* FIX: Bot icon was previously nested inside the close
+                button alongside X, which both garbled the close
+                control and meant the title row had no icon of its own.
+                Moved to sit beside the title where it belongs, and the
+                title now has an explicit text color class — it had
+                none before, which is why it looked dim/unstyled. */}
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold">Bot TaskPilot AI</h2>
-              <button onClick={onClose} className="rounded-full p-2 hover:bg-neutral-200 dark:hover:bg-neutral-700">
+              <div className="flex items-center gap-2">
+                <Bot size={22} className="text-neutral-900 dark:text-white" />
+                <h2 className="text-xl font-bold text-neutral-900 dark:text-white">
+                  TaskPilot AI
+                </h2>
+              </div>
+              <button
+                onClick={onClose}
+                className="rounded-full p-2 text-neutral-700 hover:bg-neutral-200 dark:text-neutral-200 dark:hover:bg-neutral-700"
+              >
                 <X />
-                <Bot size={30}/>
               </button>
             </div>
+
             <div ref={scrollRef} className="h-[400px] space-y-4 overflow-y-auto">
               {messages.map((msg, index) => (
                 <ChatMessage key={index} sender={msg.sender} message={msg.message} />
               ))}
             </div>
-            <AssistantInput onSend={handleSend} listening={listening} onStartListening={startListening} voiceText={pendingVoiceText} />
+
+            <AssistantInput
+              onSend={handleSend}
+              listening={listening}
+              onStartListening={startListening}
+              voiceText={pendingVoiceText}
+            />
           </motion.div>
         </>
       )}

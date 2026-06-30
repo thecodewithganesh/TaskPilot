@@ -7,24 +7,27 @@ declare global {
   }
 }
 
-export function useAssistantVoice(
-  onResult: (text: string) => void,
-) {
+export function useAssistantVoice(onResult: (text: string) => void) {
   const recognitionRef = useRef<any>(null);
-
   const [listening, setListening] = useState(false);
+
+  // Accumulates transcript fragments across multiple onresult events
+  // (which some browsers/devices fire more than once per spoken
+  // phrase even with continuous=false), so the FULL sentence is sent
+  // exactly once via onend — instead of calling onResult separately
+  // for every fragment, which was producing one AI reply per word/
+  // partial phrase.
+  const transcriptRef = useRef("");
 
   function startListening() {
     const SpeechRecognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       alert("Speech Recognition is not supported.");
       return;
     }
 
-    // Stop listening if already active
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
@@ -33,46 +36,51 @@ export function useAssistantVoice(
     }
 
     const recognition = new SpeechRecognition();
-
     recognition.lang = "en-US";
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
+
+    transcriptRef.current = "";
 
     recognition.onstart = () => {
       setListening(true);
     };
 
     recognition.onresult = (event: any) => {
-      let transcript = "";
-
-      for (
-        let i = event.resultIndex;
-        i < event.results.length;
-        i++
-      ) {
-        transcript += event.results[i][0].transcript;
+      // Rebuild the full transcript from ALL results each time,
+      // rather than appending — onresult's event.results array is
+      // cumulative for the current recognition session, so reading
+      // index 0 in isolation (as before) only ever captured the first
+      // fragment. This keeps transcriptRef as the single source of
+      // truth for "everything heard so far," sent exactly once below.
+      let combined = "";
+      for (let i = 0; i < event.results.length; i++) {
+        combined += event.results[i][0].transcript;
       }
-
-      onResult(transcript);
-    };
-
-    recognition.onerror = () => {
-      setListening(false);
-      recognitionRef.current = null;
+      transcriptRef.current = combined;
     };
 
     recognition.onend = () => {
-      setListening(false);
       recognitionRef.current = null;
+      setListening(false);
+
+      const finalText = transcriptRef.current.trim();
+      if (finalText) {
+        onResult(finalText);
+      }
+      transcriptRef.current = "";
     };
 
-    recognitionRef.current = recognition;
+    recognition.onerror = () => {
+      recognitionRef.current = null;
+      setListening(false);
+      transcriptRef.current = "";
+    };
+
     recognition.start();
+    recognitionRef.current = recognition;
   }
 
-  return {
-    listening,
-    startListening,
-  };
+  return { listening, startListening };
 }
