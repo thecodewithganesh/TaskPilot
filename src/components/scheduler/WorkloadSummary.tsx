@@ -12,26 +12,38 @@ export function WorkloadSummary({ tasks }: WorkloadSummaryProps) {
   const low = activeTasks.filter((t) => t.priority === "low").length;
 
   return (
-    <div className="mb-6 rounded-3xl border border-violet-500 bg-violet-50 p-6 dark:bg-violet-900/20">
+    <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm transition-colors dark:border-neutral-700 dark:bg-neutral-900">
       <h2 className="mb-4 text-xl font-bold text-violet-700 dark:text-violet-300">
-        📊 AI Workload Summary
+         AI Workload Summary
       </h2>
 
-      <div className="space-y-2 text-sm">
-        <p>🔥 High Priority: <strong>{high}</strong></p>
-        <p>⚡ Medium Priority: <strong>{medium}</strong></p>
-        <p>🌿 Low Priority: <strong>{low}</strong></p>
+      <div className="space-y-3 text-sm text-neutral-700 dark:text-neutral-200">
+  <p className="flex justify-between">
+    <span>High Priority</span>
+    <strong className="text-red-500">{high}</strong>
+  </p>
 
-        <hr className="my-3" />
+  <p className="flex justify-between">
+    <span>Medium Priority</span>
+    <strong className="text-amber-500">{medium}</strong>
+  </p>
 
-        <p className="font-semibold">
-          Total Active Tasks: {activeTasks.length}
-        </p>
+  <p className="flex justify-between">
+    <span>Low Priority</span>
+    <strong className="text-green-500">{low}</strong>
+  </p>
 
-        <p className="text-violet-600 dark:text-violet-300">
-          💡 Focus on high-priority tasks first.
-        </p>
-      </div>
-    </div>
+  <hr className="border-neutral-300 dark:border-neutral-700" />
+
+  <p className="flex justify-between font-semibold text-neutral-900 dark:text-white">
+    <span>Total Active Tasks</span>
+    <span>{activeTasks.length}</span>
+  </p>
+
+  <div className="rounded-xl bg-violet-100 p-3 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+    Focus on high-priority tasks first.
+  </div>
+  </div>
+</div>
   );
 }

@@ -22,7 +22,7 @@ export async function extractTasksFromText(
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite",
+      model: "gemini-2.5-flash",
       contents: userInput,
       config: {
         systemInstruction: buildExtractionSystemPrompt(
@@ -40,34 +40,56 @@ export async function extractTasksFromText(
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  title: { type: Type.STRING },
+                  title: {
+                    type: Type.STRING,
+                    description: "Short, clear title for the task.",
+                  },
                   deadline: {
                     type: Type.STRING,
                     nullable: true,
+                    description:
+                      "Deadline in YYYY-MM-DD format, resolved from the current datetime, or null if no deadline is implied.",
                   },
                   time: {
                     type: Type.STRING,
                     nullable: true,
+                    description:
+                      'Specific time in "5:00 PM" format, or null if no time is implied.',
                   },
                   priority: {
                     type: Type.STRING,
                     enum: ["high", "medium", "low"],
+                    description:
+                      "high = urgent/exams/interviews/meetings/deadlines within 24h. medium = assignments/appointments due within a week. low = reminders/hobbies/long-term tasks.",
                   },
+                  // FIX: this is the actual root cause of every task showing
+                  // "1 hr". Under responseSchema-constrained decoding, Gemini
+                  // weighs the schema's field-level `description` far more
+                  // heavily than prose rules sitting in systemInstruction —
+                  // a bare `type: Type.STRING` gives the model nothing to
+                  // anchor to, so it collapses to the single most common
+                  // token sequence. Restating the estimation guidance right
+                  // here, plus concrete varied examples, is what actually
+                  // changes behavior in structured-output mode.
                   estimatedEffort: {
                     type: Type.STRING,
+                    description:
+                      'Estimate the actual time required to COMPLETE the task. Return ONLY one value like: "10 mins", "20 mins", "30 mins", "45 mins", "1 hr", "1.5 hrs", "2 hrs", "3 hrs", "4 hrs", "5 hrs", "Half day", "Full day", or "2-3 days". Base the estimate on the task itself and NEVER default to the same value for every task.',
                   },
                   confidence: {
                     type: Type.NUMBER,
+                    description:
+                      "Confidence in this extraction, a number between 0 and 1.",
                   },
                 },
                 required: [
-                  "title",
-                  "deadline",
-                  "time",
-                  "priority",
-                  "estimatedEffort",
-                  "confidence",
-                ],
+  "title",
+  "deadline",
+  "time",
+  "priority",
+  "estimatedEffort",
+  "confidence",
+],
               },
             },
           },

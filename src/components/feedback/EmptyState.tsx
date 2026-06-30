@@ -28,7 +28,7 @@ export function EmptyState() {
         </p>
       </div>
       <div className="flex w-full max-w-xs flex-col gap-2 rounded-2xl bg-neutral-50 px-5 py-4 text-left dark:bg-neutral-900/40">
-        <span className="text-sm font-medium text-neutral-600 dark:text-neutral-300">💡 Try:</span>
+        <span className="text-sm font-medium text-neutral-600 dark:text-neutral-300"> Try:</span>
         <ul className="flex flex-col gap-1.5">
           {TIP_EXAMPLES.map((example) => (
             <li key={example} className="text-sm text-neutral-500 dark:text-neutral-400">

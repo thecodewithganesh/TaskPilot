@@ -8,14 +8,16 @@ import type { Task } from "../../types/task.types";
 import { searchTasks } from "../../utils/taskSearch";
 import { getTaskAnalytics } from "../../utils/taskAnalytics";
 import { useAssistantVoice } from "../../hooks/useAssistantVoice";
+import { Bot } from "lucide-react";
 
 interface AssistantPanelProps {
   open: boolean;
   onClose: () => void;
   tasks: Task[];
-
   onDelete: (id: string) => void;
   onToggleComplete: (id: string) => void;
+  onReschedule: (id: string, newDate: string) => void;
+  onChangePriority: (id: string, priority: "high" | "medium" | "low") => void;
 }
 
 type Message = {
@@ -29,15 +31,17 @@ export function AssistantPanel({
   tasks,
   onDelete,
   onToggleComplete,
+  onReschedule,
+  onChangePriority,
 }: AssistantPanelProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "ai",
-      message: "Hi 👋 I'm TaskPilot AI. Ask me anything about your tasks.",
+     message: "Hello. I'm TaskPilot AI. How can I help you today?"
     },
   ]);
 
-  // #6: ref for auto-scrolling the chat to the latest message
+  const [pendingVoiceText, setPendingVoiceText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -48,21 +52,27 @@ export function AssistantPanel({
   }, [messages]);
 
   const { listening, startListening } = useAssistantVoice((text) => {
+    setPendingVoiceText(text);
     void handleSend(text);
   });
 
-  async function handleSend(message: string) {
+  function findTaskByTitle(title: string): Task | undefined {
+    return tasks.find((t) => t.title.toLowerCase().includes(title.toLowerCase()));
+  }
+
+  function reportTaskNotFound(taskTitle: string) {
     setMessages((prev) => [
       ...prev,
-      {
-        sender: "user",
-        message,
-      },
+      { sender: "ai", message: ` I couldn't find a task matching "${taskTitle}".` },
     ]);
+  }
+
+  async function handleSend(message: string) {
+    setMessages((prev) => [...prev, { sender: "user", message }]);
+    setPendingVoiceText("");
 
     const lower = message.toLowerCase();
 
-    // #4: broader search keywords (find/show/search/locate/where)
     if (
       lower.includes("find") ||
       lower.includes("show") ||
@@ -70,8 +80,6 @@ export function AssistantPanel({
       lower.includes("locate") ||
       lower.includes("where")
     ) {
-      // #4: regex replace so repeated keywords/plurals are all stripped,
-      // not just the first occurrence (.replace() with a string only hits once)
       const cleanedQuery = lower
         .replace(/where's|where is|find|show|search|locate|tasks?/g, "")
         .trim();
@@ -81,12 +89,8 @@ export function AssistantPanel({
       if (results.length === 0) {
         setMessages((prev) => [
           ...prev,
-          {
-            sender: "ai",
-            message: "❌ I couldn't find any matching tasks.",
-          },
+          { sender: "ai", message: " I couldn't find any matching tasks." },
         ]);
-
         return;
       }
 
@@ -94,12 +98,9 @@ export function AssistantPanel({
         ...prev,
         {
           sender: "ai",
-          message:
-            "🔍 I found:\n\n" +
-            results.map((task) => `• ${task.title}`).join("\n"),
+          message: " I found:\n\n" + results.map((task) => `• ${task.title}`).join("\n"),
         },
       ]);
-
       return;
     }
 
@@ -119,123 +120,80 @@ export function AssistantPanel({
       let reply = "";
 
       if (lower.includes("left") || lower.includes("pending")) {
-        reply = `📋 You have ${analytics.pending} pending task(s).`;
+        reply = ` You have ${analytics.pending} pending task(s).`;
       } else if (lower.includes("completed")) {
-        reply = `✅ You have completed ${analytics.completed} task(s).`;
+        reply = `You have completed ${analytics.completed} task(s).`;
       } else if (lower.includes("overdue")) {
-        reply = `⚠️ You have ${analytics.overdue} overdue task(s).`;
+        reply = ` You have ${analytics.overdue} overdue task(s).`;
       } else if (lower.includes("today")) {
-        reply = `📅 You have ${analytics.today} task(s) due today.`;
-      } else if (
-        lower.includes("high") ||
-        lower.includes("urgent") ||
-        lower.includes("priority")
-      ) {
-        reply = `🔥 You have ${analytics.highPriority} high priority task(s).`;
+        reply = ` You have ${analytics.today} task(s) due today.`;
+      } else if (lower.includes("high") || lower.includes("urgent") || lower.includes("priority")) {
+        reply = ` You have ${analytics.highPriority} high priority task(s).`;
       } else {
-        // #2/#3 follow-on: fallback so `reply` is never sent empty
-        reply = "🤔 I'm not sure how to answer that one yet.";
+        reply = " I'm not sure how to answer that one yet.";
       }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          sender: "ai",
-          message: reply,
-        },
-      ]);
-
+      setMessages((prev) => [...prev, { sender: "ai", message: reply }]);
       return;
     }
 
-    // #2 + #3: all `action`-dependent logic now lives INSIDE the try block,
-    // so a thrown error never falls through to code that uses `action`
-    // while it's undefined, and a successful call can't "leak" past catch.
     try {
       const action = await askAssistant(message, tasks);
 
       if (action.action === "delete") {
-        const task = tasks.find((t) =>
-          t.title.toLowerCase().includes(action.taskTitle.toLowerCase())
-        );
-
+        const task = findTaskByTitle(action.taskTitle);
         if (task) {
           onDelete(task.id);
-
-          setMessages((prev) => [
-            ...prev,
-            {
-              sender: "ai",
-              message: `🗑 Deleted "${task.title}".`,
-            },
-          ]);
-
-          return;
+          setMessages((prev) => [...prev, { sender: "ai", message: `🗑 Deleted "${task.title}".` }]);
+        } else {
+          reportTaskNotFound(action.taskTitle);
         }
-
-        // #3 follow-on: previously this case fell through to code that
-        // referenced `action` outside its scope. Now it resolves cleanly.
-        setMessages((prev) => [
-          ...prev,
-          {
-            sender: "ai",
-            message: `❌ I couldn't find a task matching "${action.taskTitle}".`,
-          },
-        ]);
-
         return;
       }
 
       if (action.action === "complete") {
-        const task = tasks.find((t) =>
-          t.title.toLowerCase().includes(action.taskTitle.toLowerCase())
-        );
-
+        const task = findTaskByTitle(action.taskTitle);
         if (task) {
           onToggleComplete(task.id);
-
-          setMessages((prev) => [
-            ...prev,
-            {
-              sender: "ai",
-              message: `✅ Completed "${task.title}".`,
-            },
-          ]);
-
-          return;
+          setMessages((prev) => [...prev, { sender: "ai", message: `✅ Completed "${task.title}".` }]);
+        } else {
+          reportTaskNotFound(action.taskTitle);
         }
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            sender: "ai",
-            message: `❌ I couldn't find a task matching "${action.taskTitle}".`,
-          },
-        ]);
-
         return;
       }
 
-      const replyMessage =
-        "reply" in action
-          ? action.reply
-          : "Sorry, I couldn't process that request.";
+      if (action.action === "reschedule") {
+        const task = findTaskByTitle(action.taskTitle);
+        if (task) {
+          onReschedule(task.id, action.newDate);
+          setMessages((prev) => [
+            ...prev,
+            { sender: "ai", message: ` Rescheduled "${task.title}" to ${action.newDate}.` },
+          ]);
+        } else {
+          reportTaskNotFound(action.taskTitle);
+        }
+        return;
+      }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          sender: "ai",
-          message: replyMessage,
-        },
-      ]);
+      if (action.action === "priority") {
+        const task = findTaskByTitle(action.taskTitle);
+        if (task) {
+          onChangePriority(task.id, action.priority);
+          setMessages((prev) => [
+            ...prev,
+            { sender: "ai", message: ` Set "${task.title}" to ${action.priority} priority.` },
+          ]);
+        } else {
+          reportTaskNotFound(action.taskTitle);
+        }
+        return;
+      }
+
+      const replyMessage = "reply" in action ? action.reply : "Sorry, I couldn't process that request.";
+      setMessages((prev) => [...prev, { sender: "ai", message: replyMessage }]);
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          sender: "ai",
-          message: "⚠️ Sorry, I couldn't process that request.",
-        },
-      ]);
+      setMessages((prev) => [...prev, { sender: "ai", message: " Sorry, I couldn't process that request." }]);
     }
   }
 
@@ -243,7 +201,6 @@ export function AssistantPanel({
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -251,48 +208,26 @@ export function AssistantPanel({
             onClick={onClose}
             className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
           />
-
-          {/* Panel */}
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={{
-              type: "spring",
-              damping: 25,
-              stiffness: 250,
-            }}
+            transition={{ type: "spring", damping: 25, stiffness: 250 }}
             className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl bg-white p-6 shadow-2xl dark:bg-neutral-900"
           >
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold">🤖 TaskPilot AI</h2>
-
-              <button
-                onClick={onClose}
-                className="rounded-full p-2 hover:bg-neutral-200 dark:hover:bg-neutral-700"
-              >
+              <h2 className="text-xl font-bold">Bot TaskPilot AI</h2>
+              <button onClick={onClose} className="rounded-full p-2 hover:bg-neutral-200 dark:hover:bg-neutral-700">
                 <X />
+                <Bot size={30}/>
               </button>
             </div>
-
-            <div
-              ref={scrollRef}
-              className="h-[400px] overflow-y-auto space-y-4"
-            >
+            <div ref={scrollRef} className="h-[400px] space-y-4 overflow-y-auto">
               {messages.map((msg, index) => (
-                <ChatMessage
-                  key={index}
-                  sender={msg.sender}
-                  message={msg.message}
-                />
+                <ChatMessage key={index} sender={msg.sender} message={msg.message} />
               ))}
             </div>
-
-            <AssistantInput
-              onSend={handleSend}
-              listening={listening}
-              onStartListening={startListening}
-            />
+            <AssistantInput onSend={handleSend} listening={listening} onStartListening={startListening} voiceText={pendingVoiceText} />
           </motion.div>
         </>
       )}

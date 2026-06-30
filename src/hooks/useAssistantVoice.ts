@@ -8,7 +8,7 @@ declare global {
 }
 
 export function useAssistantVoice(
-  onResult: (text: string) => void
+  onResult: (text: string) => void,
 ) {
   const recognitionRef = useRef<any>(null);
 
@@ -24,6 +24,7 @@ export function useAssistantVoice(
       return;
     }
 
+    // Stop listening if already active
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
@@ -34,7 +35,8 @@ export function useAssistantVoice(
     const recognition = new SpeechRecognition();
 
     recognition.lang = "en-US";
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
@@ -42,20 +44,31 @@ export function useAssistantVoice(
     };
 
     recognition.onresult = (event: any) => {
-      const transcript =
-        event.results[0][0].transcript;
+      let transcript = "";
+
+      for (
+        let i = event.resultIndex;
+        i < event.results.length;
+        i++
+      ) {
+        transcript += event.results[i][0].transcript;
+      }
 
       onResult(transcript);
     };
 
-    recognition.onend = () => {
-      recognitionRef.current = null;
+    recognition.onerror = () => {
       setListening(false);
+      recognitionRef.current = null;
     };
 
-    recognition.start();
+    recognition.onend = () => {
+      setListening(false);
+      recognitionRef.current = null;
+    };
 
     recognitionRef.current = recognition;
+    recognition.start();
   }
 
   return {

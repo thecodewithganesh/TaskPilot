@@ -32,7 +32,7 @@ export function SmartInsights({ tasks }: SmartInsightsProps) {
   }).length;
 
   return (
-    <div className="mb-6 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
+    <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm transition-colors dark:border-neutral-700 dark:bg-neutral-900">
       <div className="mb-6 flex items-center gap-3">
         <div className="rounded-2xl bg-violet-100 p-3 dark:bg-violet-900/30">
           <Brain className="h-7 w-7 text-violet-600" />
@@ -43,7 +43,7 @@ export function SmartInsights({ tasks }: SmartInsightsProps) {
             AI Smart Insights
           </h2>
 
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="text-sm text-neutral-600 dark:text-neutral-300">
             Your productivity at a glance
           </p>
         </div>
@@ -111,7 +111,7 @@ function InsightCard({
             {title}
           </h3>
 
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-neutral-600 dark:text-neutral-300">
             {title.toLowerCase()}
           </p>
         </div>

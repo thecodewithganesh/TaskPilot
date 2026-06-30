@@ -25,7 +25,7 @@ export function TaskCalendar({
   });
 }
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
+    <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm transition-colors dark:border-neutral-700 dark:bg-neutral-900">
       <h2 className="mb-4 text-xl font-semibold text-neutral-900 dark:text-white">
         📅 Calendar
       </h2>

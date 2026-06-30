@@ -7,16 +7,66 @@ export interface AppShellProps {
 
 export function AppShell({ children, header }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-neutral-50 transition-colors duration-200 dark:bg-neutral-900">
+    <div
+      className="
+      min-h-screen
+      bg-gradient-to-br
+      from-slate-100
+      via-blue-50
+      to-indigo-100
+      transition-all
+      duration-300
+
+      dark:from-[#0B1220]
+      dark:via-[#111827]
+      dark:to-[#1E293B]
+    "
+    >
       {header && (
-        <div className="sticky top-0 z-10 border-b border-neutral-200/80 bg-neutral-50/80 backdrop-blur-md transition-colors duration-200 dark:border-neutral-800/80 dark:bg-neutral-900/80">
-          <div className="mx-auto flex w-full max-w-[720px] items-center px-4 py-4 sm:px-6">
+        <header
+          className="
+          sticky
+          top-0
+          z-50
+
+          border-b
+          border-white/20
+
+          bg-white/60
+          backdrop-blur-xl
+
+          dark:border-white/10
+          dark:bg-black/20
+        "
+        >
+          <div
+            className="
+            mx-auto
+            flex
+            max-w-[430px]
+            items-center
+            justify-between
+            px-5
+            py-4
+          "
+          >
             {header}
           </div>
-        </div>
+        </header>
       )}
 
-      <main className="mx-auto flex w-full max-w-[720px] flex-col gap-10 px-4 py-10 sm:px-6 sm:py-14">
+      <main
+        className="
+        mx-auto
+        flex
+        max-w-[430px]
+        flex-col
+        gap-8
+
+        px-5
+        py-8
+      "
+      >
         {children}
       </main>
     </div>

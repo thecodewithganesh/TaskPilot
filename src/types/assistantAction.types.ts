@@ -18,6 +18,21 @@ export type AssistantAction =
       priority: "high" | "medium" | "low";
     }
   | {
+      action: "today";
+    }
+  | {
+      action: "pending";
+    }
+  | {
+      action: "completed";
+    }
+  | {
+      action: "overdue";
+    }
+  | {
+      action: "highPriority";
+    }
+  | {
       action: "none";
       reply: string;
     };

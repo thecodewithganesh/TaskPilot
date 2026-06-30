@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import type { Task, Priority } from "../../types/task.types";
 import { createGoogleCalendarUrl } from "../../utils/googleCalendar";
@@ -6,6 +7,7 @@ import {
   isTaskOverdue,
   getSuggestedReschedule,
 } from "../../utils/rescheduler";
+import { getReminderMinutes } from "../../utils/reminderPreference";
 
 export interface TaskCardProps {
   task: Task;
@@ -60,19 +62,78 @@ export function TaskCard({
   const googleCalendarUrl = createGoogleCalendarUrl(task);
   const overdue = isTaskOverdue(task);
 
+  const [remaining, setRemaining] = useState("");
+
+useEffect(() => {
+  function updateRemaining() {
+    if (!task.deadline || !task.time) {
+      setRemaining(task.estimatedEffort);
+      return;
+    }
+
+    const target = new Date(`${task.deadline} ${task.time}`);
+    const now = new Date();
+
+   const reminder = getReminderMinutes();
+
+const diff =
+  target.getTime() -
+  now.getTime() -
+  reminder * 60 * 1000;
+
+    if (diff <= 0) {
+      setRemaining("Starting now");
+      return;
+    }
+
+    const hrs = Math.floor(diff / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hrs > 0) {
+      setRemaining(`${hrs} hr ${mins} min left`);
+    } else {
+      setRemaining(`${mins} min left`);
+    }
+  }
+
+  updateRemaining();
+
+  const interval = setInterval(updateRemaining, 60000);
+
+  return () => clearInterval(interval);
+}, [task.deadline, task.time, task.estimatedEffort]);
+
+  
+
   return (
     <motion.div
       variants={cardVariants}
       initial="hidden"
       animate="visible"
-      transition={{ duration: 0.35 }}
-      className={`group flex items-start gap-4 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-800 ${
+     transition={{
+  type: "spring",
+  stiffness: 260,
+  damping: 20,
+}}
+     className={`group flex items-start gap-4 rounded-[28px]
+border border-white/30
+bg-white/75
+backdrop-blur-xl
+p-6
+shadow-xl
+transition-all
+duration-300
+hover:-translate-y-1
+hover:shadow-2xl
+dark:border-neutral-700
+dark:bg-neutral-900/70
+${
         task.completed ? "opacity-60" : ""
       }`}
     >
       <button
         onClick={() => onToggleComplete(task.id)}
-        className="mt-1 text-xl"
+        className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-lg transition hover:scale-110 dark:bg-blue-900/40"
       >
         {task.completed ? "☑" : "☐"}
       </button>
@@ -84,7 +145,7 @@ export function TaskCard({
 
       <div className="flex-1">
         <h3
-          className={`text-lg font-semibold ${
+          className={`text-xl font-bold ${
             task.completed
               ? "line-through text-neutral-400"
               : "text-neutral-900 dark:text-white"
@@ -93,19 +154,19 @@ export function TaskCard({
           {task.title}
         </h3>
 
-        <div className="mt-3 flex flex-wrap gap-2 text-sm">
-          <span className="rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-700">
+        <div className="mt-4 flex flex-wrap gap-3 text-sm">
+          <span className="rounded-full bg-blue-50 px-4 py-2 font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
             {formatDeadline(task.deadline)}
           </span>
 
           {task.time && (
-            <span className="rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-700">
+            <span className="rounded-full bg-blue-50 px-4 py-2 font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
               {task.time}
             </span>
           )}
 
-          <span className="rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-700">
-            {task.estimatedEffort}
+          <span className="rounded-full bg-blue-50 px-4 py-2 font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
+            {remaining}
           </span>
         </div>
 
@@ -114,20 +175,20 @@ export function TaskCard({
             href={googleCalendarUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 inline-flex rounded-xl bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+            className="mt-5 inline-flex items-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-105"
           >
-            📅 Add to Google Calendar
+             Add to Google Calendar
           </a>
         )}
 
         {overdue && (
           <div className="mt-5 rounded-2xl border border-red-300 bg-red-50 p-4 dark:border-red-700 dark:bg-red-900/20">
             <h3 className="font-semibold text-red-600">
-              ⚠️ Missed Deadline
+              Overdue Task
             </h3>
 
             <p className="mt-2 text-sm text-red-500">
-              AI Recommendation:
+              Suggested Action
             </p>
 
             <p className="mt-1 text-sm">
@@ -147,7 +208,7 @@ export function TaskCard({
 
                   onReschedule(task.id, tomorrow.toISOString());
                 }}
-                className="rounded-xl bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-2 font-semibold text-white transition hover:scale-105"
               >
                 Tomorrow
               </button>
@@ -159,7 +220,7 @@ export function TaskCard({
 
                   onReschedule(task.id, nextWeek.toISOString());
                 }}
-                className="rounded-xl bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+                className="rounded-2xl bg-gradient-to-r from-green-500 to-emerald-500 px-5 py-2 font-semibold text-white transition hover:scale-105"
               >
                 Next Week
               </button>
@@ -170,7 +231,7 @@ export function TaskCard({
 
       <button
         onClick={() => onDelete(task.id)}
-        className="rounded-full p-2 text-neutral-400 hover:bg-red-50 hover:text-red-500"
+       className="rounded-full p-3 text-neutral-400 transition hover:scale-110 hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-900/30"
       >
         <Trash2 className="h-4 w-4" />
       </button>

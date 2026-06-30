@@ -6,13 +6,21 @@ interface UpcomingTasksProps {
 
 export function UpcomingTasks({ tasks }: UpcomingTasksProps) {
   const upcomingTasks = tasks
-    .filter((task) => !task.completed && task.deadline)
-    .sort(
-      (a, b) =>
-        new Date(a.deadline!).getTime() -
-        new Date(b.deadline!).getTime()
-    )
-    .slice(0, 5);
+  .filter((task) => !task.completed && task.deadline)
+  .sort((a, b) => {
+    const getDateTime = (task: Task) => {
+      const date = task.deadline!;
+
+      if (task.time) {
+        return new Date(`${date} ${task.time}`).getTime();
+      }
+
+      return new Date(date).getTime();
+    };
+
+    return getDateTime(a) - getDateTime(b);
+  })
+  .slice(0, 5);
 
   function formatDate(dateString: string) {
     const date = new Date(dateString);
@@ -37,13 +45,13 @@ export function UpcomingTasks({ tasks }: UpcomingTasksProps) {
   }
 
   return (
-    <div className="mb-6 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
+    <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm transition-colors dark:border-neutral-700 dark:bg-neutral-900">
       <h2 className="mb-4 text-xl font-semibold text-neutral-900 dark:text-white">
         📌 Upcoming Tasks
       </h2>
 
       {upcomingTasks.length === 0 ? (
-        <p className="text-neutral-500 dark:text-neutral-400">
+        <p className="text-neutral-600 dark:text-neutral-400">
           No upcoming tasks.
         </p>
       ) : (
@@ -54,13 +62,14 @@ export function UpcomingTasks({ tasks }: UpcomingTasksProps) {
               className="flex items-center justify-between rounded-xl border border-neutral-200 p-3 dark:border-neutral-700"
             >
               <div>
-                <p className="font-medium text-neutral-900 dark:text-white">
+                <p className="font-medium text-neutral-600 dark:text-neutral-300">
                   {task.title}
                 </p>
 
-                <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                  {formatDate(task.deadline!)}
-                </p>
+                <p className="text-sm text-neutral-600 dark:text-neutral-300">
+  {formatDate(task.deadline!)}
+  {task.time && ` • ${task.time}`}
+</p>
               </div>
 
               {task.time && (

@@ -1,18 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Mic, Send } from "lucide-react";
 
 interface AssistantInputProps {
   onSend: (message: string) => void;
   listening: boolean;
   onStartListening: () => void;
+  voiceText: string;
 }
 
 export function AssistantInput({
   onSend,
   listening,
   onStartListening,
+  voiceText,
 }: AssistantInputProps) {
   const [text, setText] = useState("");
+
+  useEffect(() => {
+    if (voiceText) {
+      setText(voiceText);
+    }
+  }, [voiceText]);
 
   function handleSend() {
     if (!text.trim()) return;
@@ -40,7 +48,7 @@ export function AssistantInput({
         onClick={onStartListening}
         className={`rounded-xl p-3 transition ${
           listening
-            ? "bg-red-500 text-white animate-pulse"
+            ? "animate-pulse bg-red-500 text-white"
             : "bg-neutral-200 hover:bg-neutral-300 dark:bg-neutral-700 dark:hover:bg-neutral-600"
         }`}
       >

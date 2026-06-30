@@ -12,17 +12,18 @@ export interface TaskListProps {
 const containerVariants = {
   hidden: {},
   visible: {
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.05,
-    },
+  transition: {
+    staggerChildren: 0.12,
+    delayChildren: 0.1,
   },
-  exit: {
-    opacity: 0,
-    transition: {
-      duration: 0.15,
-    },
+},
+ exit: {
+  opacity: 0,
+  y: 20,
+  transition: {
+    duration: 0.25,
   },
+},
 };
 
 export function TaskList({
@@ -37,21 +38,23 @@ export function TaskList({
 
   return (
     <motion.div
+      layout
       variants={containerVariants}
       initial="hidden"
       animate="visible"
       exit="exit"
-      className="flex w-full flex-col gap-3"
+      className="flexw-full flex-col gap-5 pb-24"
     >
       {tasks.map((task) => (
-        <TaskCard
-          key={task.id}
-          task={task}
-          onToggleComplete={onToggleComplete}
-          onDelete={onDelete}
-          onReschedule={onReschedule}
-        />
-      ))}
+  <motion.div key={task.id} layout layoutId={task.id}>
+    <TaskCard
+      task={task}
+      onToggleComplete={onToggleComplete}
+      onDelete={onDelete}
+      onReschedule={onReschedule}
+    />
+  </motion.div>
+))}
     </motion.div>
   );
 }

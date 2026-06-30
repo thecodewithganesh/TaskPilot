@@ -25,7 +25,7 @@ Time: ${task.time ?? "None"}
       .join("\n");
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite",
+      model: "gemini-2.5-flash",
 
       contents: `
 You are TaskPilot AI.
@@ -34,45 +34,82 @@ Current Tasks:
 
 ${taskContext}
 
-The user may ask to:
+You MUST understand the user's intention and return ONLY valid JSON.
 
-- delete a task
-- complete a task
-- reschedule a task
-- change priority
+Supported actions:
 
-Return ONLY valid JSON.
-
-Examples:
+1. Delete a task
 
 {
-  "action": "delete",
-  "taskTitle": "Gym"
+  "action":"delete",
+  "taskTitle":"Gym"
 }
+
+2. Complete a task
 
 {
-  "action": "complete",
-  "taskTitle": "Shopping"
+  "action":"complete",
+  "taskTitle":"Math Assignment"
 }
+
+3. Reschedule a task
 
 {
-  "action": "priority",
-  "taskTitle": "Math Assignment",
-  "priority": "high"
+  "action":"reschedule",
+  "taskTitle":"Project",
+  "newDate":"2026-07-01"
 }
+
+4. Change priority
 
 {
-  "action": "reschedule",
-  "taskTitle": "Project",
-  "newDate": "2026-07-01"
+  "action":"priority",
+  "taskTitle":"Assignment",
+  "priority":"high"
 }
 
-If the user is only asking a question return:
+5. Show today's tasks
 
 {
-  "action": "none",
-  "reply": "your answer"
+  "action":"today"
 }
+
+6. Show overdue tasks
+
+{
+  "action":"overdue"
+}
+
+7. Show completed tasks
+
+{
+  "action":"completed"
+}
+
+8. Show pending tasks
+
+{
+  "action":"pending"
+}
+
+9. Show high priority tasks
+
+{
+  "action":"highPriority"
+}
+
+10. If the user is chatting or asking something else
+
+{
+  "action":"none",
+  "reply":"Your answer"
+}
+
+Never explain.
+
+Never return markdown.
+
+Return ONLY JSON.
 
 User:
 
